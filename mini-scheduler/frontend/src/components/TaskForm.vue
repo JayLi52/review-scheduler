@@ -23,7 +23,7 @@ const onSubmit = async () => {
 
 <template>
   <a-card title="提交任务" size="small">
-    <a-form layout="vertical" @finish="onSubmit">
+    <a-form layout="vertical" @submit.prevent="onSubmit">
       <a-form-item label="命令">
         <a-input v-model:value="formState.command" placeholder="要执行的命令" />
       </a-form-item>
@@ -34,7 +34,9 @@ const onSubmit = async () => {
         <a-input-number v-model:value="formState.mem" :min="64" :max="65536" style="width: 100%" />
       </a-form-item>
       <a-form-item>
-        <a-button type="primary" html-type="submit" block>提交</a-button>
+        <a-button type="primary" html-type="submit" block>
+          提交
+        </a-button>
       </a-form-item>
     </a-form>
   </a-card>
