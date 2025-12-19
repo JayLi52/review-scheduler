@@ -1,5 +1,5 @@
 import { NodesService } from './nodes.service';
-import { HeartbeatDto, RegisterNodeDto } from './nodes.service';
+import type { HeartbeatDto, RegisterNodeDto } from './nodes.service';
 export declare class NodesController {
     private readonly nodesService;
     constructor(nodesService: NodesService);
