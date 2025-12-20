@@ -98,7 +98,7 @@ onUnmounted(() => {
 
           <!-- 右侧面板 -->
           <a-flex vertical gap="middle" class="panel-right">
-            <ClusterHeatmap :nodes="nodes" />
+            <ClusterHeatmap :nodes="nodes" @delete="handleDeleteNode" />
             <a-card title="任务列表" size="small" class="flex-fill task-list-card">
               <a-table
                 :data-source="tasks"
