@@ -2,7 +2,7 @@ import axios from 'axios';
 import os from 'os';
 
 const MASTER_URL = process.env.MASTER_URL ?? 'http://localhost:3000';
-const NODE_ID = process.env.NODE_ID ?? `worker-${os.hostname()}`;
+const NODE_ID = process.env.NODE_ID ?? `worker-${os.hostname()}-${process.pid}`;
 const HEARTBEAT_INTERVAL = Number(process.env.HEARTBEAT_INTERVAL ?? 3000);
 
 const totalCpu = os.cpus().length;
@@ -21,11 +21,19 @@ async function register() {
 async function heartbeat() {
   const freeMem = Math.floor(os.freemem() / (1024 * 1024));
   const freeCpu = totalCpu;
-  await axios.post(`${MASTER_URL}/nodes/heartbeat`, {
-    id: NODE_ID,
-    freeCpu,
-    freeMem,
-  });
+  try {
+    const res = await axios.post(`${MASTER_URL}/nodes/heartbeat`, {
+      id: NODE_ID,
+      freeCpu,
+      freeMem,
+    });
+    if (res.data?.error === 'NODE_NOT_FOUND') {
+      console.warn('[worker] node not found, re-registering...');
+      await register();
+    }
+  } catch (err) {
+    console.warn('[worker] heartbeat failed', (err as Error).message);
+  }
 }
 
 async function main() {
@@ -33,15 +41,10 @@ async function main() {
     await register();
   } catch (err) {
     console.error('[worker] register failed', err);
-    return;
   }
 
   setInterval(async () => {
-    try {
-      await heartbeat();
-    } catch (err) {
-      console.warn('[worker] heartbeat failed', (err as Error).message);
-    }
+    await heartbeat();
   }, HEARTBEAT_INTERVAL);
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { onMounted, onUnmounted, ref } from 'vue';
 import { message, theme } from 'ant-design-vue';
 import { api } from './api';
 import TaskForm from './components/TaskForm.vue';
@@ -10,26 +10,38 @@ const nodes = ref<any[]>([]);
 const tasks = ref<any[]>([]);
 const logs = ref<string[]>(['日志占位：接入 WebSocket 后实时更新']);
 const loading = ref(false);
+let timer: ReturnType<typeof setInterval> | null = null;
 
-const refresh = async () => {
-  loading.value = true;
+const refresh = async (silent = false) => {
+  if (!silent) loading.value = true;
   try {
     const [nodeRes, taskRes] = await Promise.all([api.get('/nodes'), api.get('/tasks')]);
     nodes.value = nodeRes.data ?? [];
     tasks.value = taskRes.data ?? [];
   } finally {
-    loading.value = false;
+    if (!silent) loading.value = false;
   }
 };
 
 const handleSubmit = async (payload: { command: string; cpu: number; mem: number }) => {
   await api.post('/tasks', payload);
   message.success('任务已提交');
-  await refresh();
+  await refresh(true);
 };
 
 onMounted(() => {
   refresh();
+  // 每 2 秒轮询一次状态
+  timer = setInterval(() => {
+    refresh(true);
+  }, 2000);
+});
+
+onUnmounted(() => {
+  if (timer) {
+    clearInterval(timer);
+    timer = null;
+  }
 });
 </script>
 
