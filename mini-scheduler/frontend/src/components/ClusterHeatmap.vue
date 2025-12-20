@@ -57,11 +57,10 @@ const formatPercent = (free: number, total: number) =>
   gap: 12px;
 }
 .card {
-  background: #111a2c;
-  border: 1px solid #1f2d3d;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 8px;
   padding: 12px;
-  color: #e6f7ff;
 }
 .card-header {
   display: flex;
