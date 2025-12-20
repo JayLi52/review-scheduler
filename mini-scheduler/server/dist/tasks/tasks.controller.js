@@ -35,6 +35,14 @@ let TasksController = class TasksController {
     list() {
         return this.tasksService.list();
     }
+    poll(nodeId) {
+        if (!nodeId)
+            return [];
+        return this.tasksService.getAssignedTasks(nodeId);
+    }
+    updateStatus(id, body) {
+        return this.tasksService.updateStatus(id, body.status);
+    }
 };
 exports.TasksController = TasksController;
 __decorate([
@@ -50,6 +58,21 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], TasksController.prototype, "list", null);
+__decorate([
+    (0, common_1.Get)('poll'),
+    __param(0, (0, common_1.Query)('nodeId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "poll", null);
+__decorate([
+    (0, common_1.Post)(':id/status'),
+    __param(0, (0, common_1.Param)('id')),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String, Object]),
+    __metadata("design:returntype", void 0)
+], TasksController.prototype, "updateStatus", null);
 exports.TasksController = TasksController = __decorate([
     (0, common_1.Controller)('tasks'),
     __metadata("design:paramtypes", [tasks_service_1.TasksService,

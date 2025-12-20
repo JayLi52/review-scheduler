@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue';
 import { message, theme } from 'ant-design-vue';
+import { io } from 'socket.io-client';
 import { api } from './api';
 import TaskForm from './components/TaskForm.vue';
 import ClusterHeatmap from './components/ClusterHeatmap.vue';
@@ -8,9 +9,32 @@ import LogViewer from './components/LogViewer.vue';
 
 const nodes = ref<any[]>([]);
 const tasks = ref<any[]>([]);
-const logs = ref<string[]>(['日志占位：接入 WebSocket 后实时更新']);
+const logs = ref<string[]>([]);
 const loading = ref(false);
 let timer: ReturnType<typeof setInterval> | null = null;
+let socket: any = null;
+
+// 初始化 WebSocket
+const initSocket = () => {
+  socket = io(import.meta.env.VITE_API_BASE ?? 'http://localhost:3000');
+  
+  socket.on('connect', () => {
+    logs.value.push(`[System] Connected to log stream`);
+  });
+
+  socket.on('log', (data: any) => {
+    const time = new Date(data.timestamp).toLocaleTimeString();
+    logs.value.push(`[${time}] [${data.nodeId}] [${data.taskId}] ${data.message}`);
+    // 保持最多 1000 行日志，避免内存溢出
+    if (logs.value.length > 1000) {
+      logs.value.shift();
+    }
+  });
+
+  socket.on('disconnect', () => {
+    logs.value.push(`[System] Disconnected from log stream`);
+  });
+};
 
 const refresh = async (silent = false) => {
   if (!silent) loading.value = true;
@@ -29,8 +53,19 @@ const handleSubmit = async (payload: { command: string; cpu: number; mem: number
   await refresh(true);
 };
 
+const handleDeleteNode = async (nodeId: string) => {
+  try {
+    await api.delete(`/nodes/${nodeId}`);
+    message.success('节点已删除');
+    await refresh(true);
+  } catch (err) {
+    message.error('删除节点失败');
+  }
+};
+
 onMounted(() => {
   refresh();
+  initSocket();
   // 每 2 秒轮询一次状态
   timer = setInterval(() => {
     refresh(true);
@@ -41,6 +76,10 @@ onUnmounted(() => {
   if (timer) {
     clearInterval(timer);
     timer = null;
+  }
+  if (socket) {
+    socket.disconnect();
+    socket = null;
   }
 });
 </script>

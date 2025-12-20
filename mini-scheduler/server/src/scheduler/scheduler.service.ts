@@ -36,9 +36,18 @@ export class SchedulerService {
       (n) => n.freeCpu >= task.cpu && n.freeMem >= task.mem && n.status === 'ONLINE',
     );
     if (!candidates.length) return undefined;
+    
+    // Best Fit: 选择分配后剩余资源比例最小的节点（填满节点，保留大块资源）
     candidates.sort((a, b) => {
-      const scoreA = a.freeCpu - task.cpu + (a.freeMem - task.mem);
-      const scoreB = b.freeCpu - task.cpu + (b.freeMem - task.mem);
+      // 计算剩余资源比例 (归一化，避免 CPU 和 内存 量级差异导致的不平衡)
+      const aCpuRatio = (a.freeCpu - task.cpu) / a.totalCpu;
+      const aMemRatio = (a.freeMem - task.mem) / a.totalMem;
+      const scoreA = (aCpuRatio + aMemRatio) / 2;
+
+      const bCpuRatio = (b.freeCpu - task.cpu) / b.totalCpu;
+      const bMemRatio = (b.freeMem - task.mem) / b.totalMem;
+      const scoreB = (bCpuRatio + bMemRatio) / 2;
+
       return scoreA - scoreB;
     });
     return candidates[0];

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { DeleteOutlined } from '@ant-design/icons-vue';
+import { Popconfirm } from 'ant-design-vue';
+
 defineProps<{
   nodes: Array<{
     id: string;
@@ -9,6 +12,10 @@ defineProps<{
     totalMem: number;
     status: string;
   }>;
+}>();
+
+const emit = defineEmits<{
+  (e: 'delete', id: string): void;
 }>();
 
 const statusColor: Record<string, string> = {
@@ -27,7 +34,16 @@ const formatPercent = (free: number, total: number) =>
       <div v-for="node in nodes" :key="node.id" class="card">
         <div class="card-header">
           <span>{{ node.name || node.id }}</span>
-          <a-tag :color="statusColor[node.status] || 'default'">{{ node.status }}</a-tag>
+          <div class="header-actions">
+            <a-tag :color="statusColor[node.status] || 'default'">{{ node.status }}</a-tag>
+            <Popconfirm
+              v-if="node.status !== 'ONLINE'"
+              title="确定删除该节点吗？"
+              @confirm="emit('delete', node.id)"
+            >
+              <DeleteOutlined class="delete-icon" />
+            </Popconfirm>
+          </div>
         </div>
         <div class="metric">
           <span>CPU</span>
@@ -67,6 +83,19 @@ const formatPercent = (free: number, total: number) =>
   justify-content: space-between;
   align-items: center;
   margin-bottom: 8px;
+}
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.delete-icon {
+  color: #ff4d4f;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.delete-icon:hover {
+  opacity: 0.8;
 }
 .metric {
   margin: 6px 0;

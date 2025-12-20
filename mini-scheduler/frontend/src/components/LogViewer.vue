@@ -54,6 +54,8 @@ onUnmounted(() => {
   font-family: ui-monospace, SFMono-Regular, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono,
     Courier New, monospace;
   padding: 12px;
+  /* 增加底部 padding，防止最新日志贴底太近 */
+  padding-bottom: 24px;
   border-radius: 4px;
   height: 100%;
   overflow: auto;

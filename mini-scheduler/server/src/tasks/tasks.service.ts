@@ -26,6 +26,10 @@ export class TasksService {
     return this.tasks.filter((t) => t.status === 'PENDING');
   }
 
+  getAssignedTasks(nodeId: string): TaskRecord[] {
+    return this.tasks.filter((t) => t.assignedNodeId === nodeId && t.status === 'ASSIGNED');
+  }
+
   updateStatus(id: string, status: TaskStatus, assignedNodeId?: string) {
     const task = this.tasks.find((t) => t.id === id);
     if (!task) return undefined;

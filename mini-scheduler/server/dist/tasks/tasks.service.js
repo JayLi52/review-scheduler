@@ -28,6 +28,9 @@ let TasksService = class TasksService {
     pending() {
         return this.tasks.filter((t) => t.status === 'PENDING');
     }
+    getAssignedTasks(nodeId) {
+        return this.tasks.filter((t) => t.assignedNodeId === nodeId && t.status === 'ASSIGNED');
+    }
     updateStatus(id, status, assignedNodeId) {
         const task = this.tasks.find((t) => t.id === id);
         if (!task)

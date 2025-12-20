@@ -17,5 +17,9 @@ export declare class TasksController {
         }[];
     }>;
     list(): import("../common/types").TaskRecord[];
+    poll(nodeId: string): import("../common/types").TaskRecord[];
+    updateStatus(id: string, body: {
+        status: 'RUNNING' | 'SUCCESS' | 'FAILED';
+    }): import("../common/types").TaskRecord | undefined;
 }
 export {};

@@ -66,6 +66,14 @@ export class NodesService {
     return this.nodes.get(id);
   }
 
+  remove(id: string): boolean {
+    const node = this.nodes.get(id);
+    if (!node) return false;
+    this.nodes.delete(id);
+    this.logger.log(`Node removed: ${id}`);
+    return true;
+  }
+
   assignTask(nodeId: string, taskId: string, cpu: number, mem: number): boolean {
     const node = this.nodes.get(nodeId);
     if (!node) return false;

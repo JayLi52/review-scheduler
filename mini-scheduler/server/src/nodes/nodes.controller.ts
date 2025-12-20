@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { NodesService } from './nodes.service';
 import type { HeartbeatDto, RegisterNodeDto } from './nodes.service';
 
@@ -23,6 +23,11 @@ export class NodesController {
   @Get()
   list() {
     return this.nodesService.list();
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.nodesService.remove(id);
   }
 }
 
