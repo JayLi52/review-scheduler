@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { NodeInfo } from '../common/types';
+import { EventsGateway } from '../events/events.gateway';
 
 interface RegisterNodeDto {
   id: string;
@@ -23,8 +24,12 @@ export class NodesService {
   private readonly unhealthyThresholdMs = 10_000;
   private readonly offlineThresholdMs = 30_000;
 
-  constructor() {
+  constructor(private readonly eventsGateway: EventsGateway) {
     setInterval(() => this.sweepHealth(), 5_000);
+  }
+
+  private emitUpdate() {
+    this.eventsGateway.server.emit('node-update', Array.from(this.nodes.values()));
   }
 
   register(dto: RegisterNodeDto): NodeInfo {
@@ -43,6 +48,7 @@ export class NodesService {
     };
     this.nodes.set(dto.id, node);
     this.logger.log(`Node registered/updated: ${dto.id}`);
+    this.emitUpdate();
     return node;
   }
 
@@ -55,6 +61,7 @@ export class NodesService {
     node.freeMem = dto.freeMem;
     node.lastHeartbeat = Date.now();
     node.status = 'ONLINE';
+    this.emitUpdate();
     return node;
   }
 
@@ -71,6 +78,7 @@ export class NodesService {
     if (!node) return false;
     this.nodes.delete(id);
     this.logger.log(`Node removed: ${id}`);
+    this.emitUpdate();
     return true;
   }
 
@@ -81,11 +89,13 @@ export class NodesService {
     node.freeCpu -= cpu;
     node.freeMem -= mem;
     node.runningTaskIds.push(taskId);
+    this.emitUpdate();
     return true;
   }
 
   sweepHealth() {
     const now = Date.now();
+    let changed = false;
     this.nodes.forEach((node) => {
       const delta = now - node.lastHeartbeat;
       const prev = node.status;
@@ -98,8 +108,10 @@ export class NodesService {
       }
       if (prev !== node.status) {
         this.logger.warn(`Node ${node.id} status -> ${node.status}`);
+        changed = true;
       }
     });
+    if (changed) this.emitUpdate();
   }
 }
 

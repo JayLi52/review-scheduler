@@ -31,6 +31,14 @@ const initSocket = () => {
     }
   });
 
+  socket.on('task-update', (data: any[]) => {
+    tasks.value = data;
+  });
+
+  socket.on('node-update', (data: any[]) => {
+    nodes.value = data;
+  });
+
   socket.on('disconnect', () => {
     logs.value.push(`[System] Disconnected from log stream`);
   });
@@ -63,20 +71,22 @@ const handleDeleteNode = async (nodeId: string) => {
   }
 };
 
+const handleDeleteTask = async (taskId: string) => {
+  try {
+    await api.delete(`/tasks/${taskId}`);
+    message.success('任务已删除');
+    await refresh(true);
+  } catch (err) {
+    message.error('删除任务失败');
+  }
+};
+
 onMounted(() => {
   refresh();
   initSocket();
-  // 每 2 秒轮询一次状态
-  timer = setInterval(() => {
-    refresh(true);
-  }, 2000);
 });
 
 onUnmounted(() => {
-  if (timer) {
-    clearInterval(timer);
-    timer = null;
-  }
   if (socket) {
     socket.disconnect();
     socket = null;
@@ -115,6 +125,13 @@ onUnmounted(() => {
                 <a-table-column title="内存" data-index="mem" width="100" />
                 <a-table-column title="状态" data-index="status" width="100" />
                 <a-table-column title="节点" data-index="assignedNodeId" width="140" />
+                <a-table-column title="操作" width="80">
+                  <template #default="{ record }">
+                    <a-button type="link" danger size="small" @click="handleDeleteTask(record.id)">
+                      删除
+                    </a-button>
+                  </template>
+                </a-table-column>
               </a-table>
             </a-card>
           </a-flex>

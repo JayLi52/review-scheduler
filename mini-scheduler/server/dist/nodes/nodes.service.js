@@ -12,13 +12,19 @@ var NodesService_1;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.NodesService = void 0;
 const common_1 = require("@nestjs/common");
+const events_gateway_1 = require("../events/events.gateway");
 let NodesService = NodesService_1 = class NodesService {
+    eventsGateway;
     logger = new common_1.Logger(NodesService_1.name);
     nodes = new Map();
     unhealthyThresholdMs = 10_000;
     offlineThresholdMs = 30_000;
-    constructor() {
+    constructor(eventsGateway) {
+        this.eventsGateway = eventsGateway;
         setInterval(() => this.sweepHealth(), 5_000);
+    }
+    emitUpdate() {
+        this.eventsGateway.server.emit('node-update', Array.from(this.nodes.values()));
     }
     register(dto) {
         const now = Date.now();
@@ -36,6 +42,7 @@ let NodesService = NodesService_1 = class NodesService {
         };
         this.nodes.set(dto.id, node);
         this.logger.log(`Node registered/updated: ${dto.id}`);
+        this.emitUpdate();
         return node;
     }
     heartbeat(dto) {
@@ -47,6 +54,7 @@ let NodesService = NodesService_1 = class NodesService {
         node.freeMem = dto.freeMem;
         node.lastHeartbeat = Date.now();
         node.status = 'ONLINE';
+        this.emitUpdate();
         return node;
     }
     list() {
@@ -54,6 +62,15 @@ let NodesService = NodesService_1 = class NodesService {
     }
     get(id) {
         return this.nodes.get(id);
+    }
+    remove(id) {
+        const node = this.nodes.get(id);
+        if (!node)
+            return false;
+        this.nodes.delete(id);
+        this.logger.log(`Node removed: ${id}`);
+        this.emitUpdate();
+        return true;
     }
     assignTask(nodeId, taskId, cpu, mem) {
         const node = this.nodes.get(nodeId);
@@ -64,10 +81,12 @@ let NodesService = NodesService_1 = class NodesService {
         node.freeCpu -= cpu;
         node.freeMem -= mem;
         node.runningTaskIds.push(taskId);
+        this.emitUpdate();
         return true;
     }
     sweepHealth() {
         const now = Date.now();
+        let changed = false;
         this.nodes.forEach((node) => {
             const delta = now - node.lastHeartbeat;
             const prev = node.status;
@@ -82,13 +101,16 @@ let NodesService = NodesService_1 = class NodesService {
             }
             if (prev !== node.status) {
                 this.logger.warn(`Node ${node.id} status -> ${node.status}`);
+                changed = true;
             }
         });
+        if (changed)
+            this.emitUpdate();
     }
 };
 exports.NodesService = NodesService;
 exports.NodesService = NodesService = NodesService_1 = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [])
+    __metadata("design:paramtypes", [events_gateway_1.EventsGateway])
 ], NodesService);
 //# sourceMappingURL=nodes.service.js.map

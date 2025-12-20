@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { TaskRecord, TaskSpec, TaskStatus } from '../common/types';
+import { EventsGateway } from '../events/events.gateway';
 
 @Injectable()
 export class TasksService {
+  constructor(private readonly eventsGateway: EventsGateway) {}
+
   private tasks: TaskRecord[] = [];
+
+  private emitUpdate() {
+    this.eventsGateway.server.emit('task-update', this.tasks);
+  }
 
   create(spec: TaskSpec): TaskRecord {
     const now = Date.now();
@@ -15,6 +22,7 @@ export class TasksService {
       updatedAt: now,
     };
     this.tasks.push(task);
+    this.emitUpdate();
     return task;
   }
 
@@ -36,17 +44,32 @@ export class TasksService {
     task.status = status;
     task.assignedNodeId = assignedNodeId ?? task.assignedNodeId;
     task.updatedAt = Date.now();
+    this.emitUpdate();
     return task;
   }
 
   resetTasksForNode(nodeId: string) {
+    let changed = false;
     this.tasks.forEach((t) => {
       if (t.assignedNodeId === nodeId && t.status === 'RUNNING') {
         t.status = 'PENDING';
         t.assignedNodeId = undefined;
         t.updatedAt = Date.now();
+        changed = true;
       }
     });
+    if (changed) this.emitUpdate();
+  }
+
+  remove(id: string) {
+    const index = this.tasks.findIndex((t) => t.id === id);
+    if (index !== -1) {
+      const deletedTask = this.tasks[index];
+      this.tasks.splice(index, 1);
+      this.emitUpdate();
+      return deletedTask;
+    }
+    return null;
   }
 }
 

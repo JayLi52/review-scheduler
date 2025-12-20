@@ -33,6 +33,9 @@ let NodesController = class NodesController {
     list() {
         return this.nodesService.list();
     }
+    remove(id) {
+        return this.nodesService.remove(id);
+    }
 };
 exports.NodesController = NodesController;
 __decorate([
@@ -55,6 +58,13 @@ __decorate([
     __metadata("design:paramtypes", []),
     __metadata("design:returntype", void 0)
 ], NodesController.prototype, "list", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", void 0)
+], NodesController.prototype, "remove", null);
 exports.NodesController = NodesController = __decorate([
     (0, common_1.Controller)('nodes'),
     __metadata("design:paramtypes", [nodes_service_1.NodesService])

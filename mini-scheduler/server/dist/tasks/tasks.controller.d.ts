@@ -21,5 +21,6 @@ export declare class TasksController {
     updateStatus(id: string, body: {
         status: 'RUNNING' | 'SUCCESS' | 'FAILED';
     }): import("../common/types").TaskRecord | undefined;
+    remove(id: string): import("../common/types").TaskRecord | null;
 }
 export {};

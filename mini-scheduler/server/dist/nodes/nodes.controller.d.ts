@@ -8,4 +8,5 @@ export declare class NodesController {
         error: string;
     };
     list(): import("../common/types").NodeInfo[];
+    remove(id: string): boolean;
 }

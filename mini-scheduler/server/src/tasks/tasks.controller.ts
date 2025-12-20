@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { SchedulerService } from '../scheduler/scheduler.service';
 
@@ -43,6 +43,11 @@ export class TasksController {
     @Body() body: { status: 'RUNNING' | 'SUCCESS' | 'FAILED' },
   ) {
     return this.tasksService.updateStatus(id, body.status);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.tasksService.remove(id);
   }
 }
 
